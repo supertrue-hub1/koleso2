@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String?
+  role      String     @default("user") // "user" или "admin"
+  spins     UserSpin[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Segment {
+  id         String        @id @default(cuid())
+  label      String
+  color      String
+  weight     Int
+  order      Int           @default(0)
+  active     Boolean       @default(true)
+  spins      SpinHistory[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model SpinHistory {
+  id        String   @id @default(cuid())
+  segmentId String
+  segment   Segment  @relation(fields: [segmentId], references: [id])
+  userId    String?
+  createdAt DateTime @default(now())
+}
+
+model UserSpin {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  spinsLeft Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

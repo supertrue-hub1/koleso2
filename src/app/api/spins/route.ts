@@ -1,0 +1,176 @@
+// API Spins Route - Updated
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+// GET - получить оставшиеся попытки пользователя
+export async function GET(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get('session');
+    
+    if (!sessionCookie) {
+      return NextResponse.json({ spinsLeft: 0, maxSpins: 3 });
+    }
+
+    const session = JSON.parse(sessionCookie.value);
+
+    // Получаем настройку максимальных попыток
+    let maxSpins = 3;
+    try {
+      const maxSpinsSetting = await prisma.settings.findUnique({
+        where: { key: 'maxSpins' },
+      });
+      if (maxSpinsSetting) {
+        maxSpins = parseInt(maxSpinsSetting.value);
+      }
+    } catch {
+      // Игнорируем ошибку
+    }
+
+    // Получаем или создаем запись о попытках пользователя
+    let userSpin = await prisma.userSpin.findFirst({
+      where: { userId: session.id },
+    });
+
+    if (!userSpin) {
+      userSpin = await prisma.userSpin.create({
+        data: {
+          userId: session.id,
+          spinsLeft: maxSpins,
+        },
+      });
+    }
+
+    return NextResponse.json({ 
+      spinsLeft: userSpin.spinsLeft, 
+      maxSpins,
+    });
+  } catch (error) {
+    console.error('Get spins error:', error);
+    return NextResponse.json({ spinsLeft: 3, maxSpins: 3 });
+  }
+}
+
+// POST - использовать одну попытку
+export async function POST(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get('session');
+    
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Необходимо авторизоваться' },
+        { status: 401 }
+      );
+    }
+
+    const session = JSON.parse(sessionCookie.value);
+
+    // Получаем максимальное количество попыток
+    let maxSpins = 3;
+    try {
+      const maxSpinsSetting = await prisma.settings.findUnique({
+        where: { key: 'maxSpins' },
+      });
+      if (maxSpinsSetting) {
+        maxSpins = parseInt(maxSpinsSetting.value);
+      }
+    } catch {
+      // Игнорируем ошибку
+    }
+
+    // Получаем запись о попытках
+    let userSpin = await prisma.userSpin.findFirst({
+      where: { userId: session.id },
+    });
+
+    // Если записи нет, создаем с максимальными попытками
+    if (!userSpin) {
+      userSpin = await prisma.userSpin.create({
+        data: {
+          userId: session.id,
+          spinsLeft: maxSpins,
+        },
+      });
+    }
+
+    if (userSpin.spinsLeft <= 0) {
+      return NextResponse.json(
+        { error: 'Попытки закончились' },
+        { status: 400 }
+      );
+    }
+
+    // Уменьшаем количество попыток
+    const updated = await prisma.userSpin.update({
+      where: { id: userSpin.id },
+      data: { spinsLeft: userSpin.spinsLeft - 1 },
+    });
+
+    return NextResponse.json({ 
+      spinsLeft: updated.spinsLeft, 
+      maxSpins,
+    });
+  } catch (error) {
+    console.error('Use spin error:', error);
+    return NextResponse.json(
+      { error: 'Ошибка при использовании попытки' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - сбросить попытки (для админа)
+export async function DELETE(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get('session');
+    
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Доступ запрещен' },
+        { status: 403 }
+      );
+    }
+
+    const session = JSON.parse(sessionCookie.value);
+    
+    // Проверяем что это админ
+    const user = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { role: true },
+    });
+
+    if (user?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Доступ запрещен' },
+        { status: 403 }
+      );
+    }
+
+    // Получаем максимальное количество попыток
+    let maxSpins = 3;
+    try {
+      const maxSpinsSetting = await prisma.settings.findUnique({
+        where: { key: 'maxSpins' },
+      });
+      if (maxSpinsSetting) {
+        maxSpins = parseInt(maxSpinsSetting.value);
+      }
+    } catch {
+      // Игнорируем ошибку
+    }
+
+    // Сбрасываем попытки всем пользователям
+    await prisma.userSpin.updateMany({
+      data: { spinsLeft: maxSpins },
+    });
+
+    return NextResponse.json({ success: true, message: 'Попытки сброшены' });
+  } catch (error) {
+    console.error('Reset spins error:', error);
+    return NextResponse.json(
+      { error: 'Ошибка при сбросе попыток' },
+      { status: 500 }
+    );
+  }
+}
