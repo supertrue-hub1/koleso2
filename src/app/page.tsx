@@ -382,7 +382,7 @@ export default function Home() {
                 )}
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#FF8C00]"></div>
-                  <span>Кручиваний: <span className="text-white font-medium">{spinCount}</span></span>
+                  <span>Попыток: <span className="text-white font-medium">{spinCount}</span></span>
                 </div>
                 {winner && !showResult && (
                   <div className="flex items-center gap-2">
