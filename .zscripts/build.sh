@@ -77,6 +77,12 @@ if [ -d "public" ]; then
     cp -r public "$BUILD_DIR/next-service-dist/"
 fi
 
+# 复制 .env.production как .env
+if [ -f ".env.production" ]; then
+    echo "  - 复制 .env.production"
+    cp .env.production "$BUILD_DIR/next-service-dist/.env"
+fi
+
 # 最后再迁移数据库到 BUILD_DIR/db
 if [ "$(ls -A ./db 2>/dev/null)" ]; then
     echo "🗄️  检测到数据库文件，运行数据库迁移..."
