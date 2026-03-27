@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Ошибка при регистрации' },
+      { error: 'Ошибка при регистрации: ' + error?.message || error },
       { status: 500 }
     );
   }
