@@ -39,8 +39,8 @@ model SpinHistory {
   id        String   @id @default(cuid())
   segmentId String
   segment   Segment  @relation(fields: [segmentId], references: [id])
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?  // может быть null если пользователь не найден в БД
+  user      User?    @relation(fields: [userId], references: [id], nullable: true)
   createdAt DateTime @default(now())
 }
 
