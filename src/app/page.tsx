@@ -270,53 +270,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-                onClick={() => setShowPrizes(true)}
-                className="btn-secondary text-[#999999] hover:text-white"
-              >
-                <Gift className="w-4 h-4 mr-2" />
-                Призы
-              </Button>
-              
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <div className="hidden md:flex items-center gap-2 text-[#999999]">
-                    <span className="text-sm">{user.name}</span>
-                    {user.isAdmin && (
-                      <span className="text-xs bg-[#FF8C00] text-white px-2 py-0.5 rounded-[4px]">ADMIN</span>
-                    )}
-                  </div>
-                  
-                  {user.isAdmin && (
-                    <Button
-                      onClick={() => setShowAdmin(true)}
-                      className="btn-secondary text-[#999999] hover:text-white"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Админ
-                    </Button>
-                  )}
-                  
-                  <Button
-                    onClick={handleLogout}
-                    className="btn-secondary text-[#999999] hover:text-white"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Выход
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => setShowAuth(true)}
-                  className="btn-primary text-white"
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Войти
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
 
       <main className="flex-1 relative z-10 pt-24">
         <div className="max-w-6xl mx-auto px-4 pb-8">
