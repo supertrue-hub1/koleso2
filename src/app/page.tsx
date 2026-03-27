@@ -78,8 +78,7 @@ export default function Home() {
     try {
       const response = await fetch('/api/spins', {
         headers: {
-          'x-user-id': user.id,
-          'x-user-role': user.isAdmin ? 'ADMIN' : 'user',
+          'x-user-email': user.email,
         },
       });
       const data = await response.json();
@@ -139,8 +138,7 @@ export default function Home() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'x-user-id': user.id,
-            'x-user-role': user.isAdmin ? 'ADMIN' : 'user',
+            'x-user-email': user.email,
           },
           body: JSON.stringify({ segmentId: winningSegment.id }),
         });
