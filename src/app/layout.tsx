@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Колесо Фортуны",
+  title: "ТТ - Колесо фортуны",
   description: "Крутите колесо и выигрывайте призы!",
   icons: {
     icon: "/favicon.svg",
