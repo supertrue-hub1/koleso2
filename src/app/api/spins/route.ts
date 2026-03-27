@@ -73,9 +73,12 @@ export async function POST(request: NextRequest) {
   try {
     const sessionCookie = request.cookies.get('session');
     
+    console.log('POST /api/spins - cookies:', request.cookies.getAll().map(c => c.name));
+    console.log('POST /api/spins - session cookie:', sessionCookie?.value);
+    
     if (!sessionCookie) {
       return NextResponse.json(
-        { error: 'Необходимо авторизоваться' },
+        { error: 'Необходимо авторизоваться', debug: 'no session cookie' },
         { status: 401 }
       );
     }

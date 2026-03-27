@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
       domain: process.env.NODE_ENV === 'production' ? '.frealab.ru' : undefined,
     });
 
+    console.log('Login: cookie set with domain:', process.env.NODE_ENV === 'production' ? '.frealab.ru' : 'localhost');
+
     return response;
   } catch (error) {
     console.error('Login error:', error);
