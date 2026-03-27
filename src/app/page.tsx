@@ -57,7 +57,7 @@ export default function Home() {
 
   const loadSegments = async () => {
     try {
-      const response = await fetch('/api/segments');
+      const response = await fetch('/api/segments', { credentials: 'include' });
       const data = await response.json();
       if (data.segments) {
         setSegments(data.segments.map((s: { id: string; label: string; color: string; weight: number }) => ({
@@ -74,7 +74,7 @@ export default function Home() {
 
   const loadSpins = async () => {
     try {
-      const response = await fetch('/api/spins');
+      const response = await fetch('/api/spins', { credentials: 'include' });
       const data = await response.json();
       setSpinsLeft(data.spinsLeft);
       setMaxSpins(data.maxSpins);
