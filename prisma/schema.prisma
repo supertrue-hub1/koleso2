@@ -15,6 +15,7 @@ model User {
   email     String     @unique
   password  String
   name      String?
+  phone     String?
   role      String     @default("user") // "user" или "admin"
   spins     UserSpin[]
   createdAt DateTime   @default(now())

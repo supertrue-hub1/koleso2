@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit2, Check, X, Save, RefreshCw, ChevronLeft, RotateCcw, Settings } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Save, RefreshCw, ChevronLeft, RotateCcw, Settings, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,15 @@ interface Segment {
   weight: number;
   order: number;
   active: boolean;
+}
+
+interface Winner {
+  userId: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  won: string;
+  wonAt: Date;
 }
 
 interface AdminPanelProps {
@@ -37,6 +46,10 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
   // Настройки
   const [maxSpins, setMaxSpins] = useState(3);
   const [settingsLoading, setSettingsLoading] = useState(true);
+
+  // Победители
+  const [winners, setWinners] = useState<Winner[]>([]);
+  const [winnersLoading, setWinnersLoading] = useState(true);
 
   // Загрузка сегментов
   const loadSegments = async () => {
@@ -74,9 +87,28 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
     }
   };
 
+  // Загрузка победителей
+  const loadWinners = async () => {
+    setWinnersLoading(true);
+    try {
+      const response = await fetch('/api/admin/winners', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWinners(data.winners || []);
+      }
+    } catch (error) {
+      console.error('Load winners error:', error);
+    } finally {
+      setWinnersLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSegments();
     loadSettings();
+    loadWinners();
   }, []);
 
   // Сохранение настроек
@@ -338,6 +370,52 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
                 <span className="text-white font-bold ml-2">{totalWeight}</span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Топ 10 победителей */}
+        <Card className="bg-[#2A2A2A] border border-[#444444] rounded-[10px] mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-b from-yellow-500 to-yellow-600 flex items-center justify-center rounded-[6px]">
+                <Trophy className="w-5 h-5 text-white" />
+              </div>
+              <CardTitle className="text-lg text-white font-bold tracking-wide">
+                ТОП 10 ПОБЕДИТЕЛЕЙ
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {winnersLoading ? (
+              <div className="text-center text-[#666666] py-4">Загрузка...</div>
+            ) : winners.length === 0 ? (
+              <div className="text-center text-[#666666] py-4">Пока нет победителей</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-[#999999] border-b border-[#444444]">
+                      <th className="text-left py-2 px-2">#</th>
+                      <th className="text-left py-2 px-2">Имя</th>
+                      <th className="text-left py-2 px-2">Почта</th>
+                      <th className="text-left py-2 px-2">Телефон</th>
+                      <th className="text-left py-2 px-2">Выиграл</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {winners.map((winner, index) => (
+                      <tr key={winner.userId} className="border-b border-[#333333]">
+                        <td className="py-2 px-2 text-[#FF8C00] font-bold">{index + 1}</td>
+                        <td className="py-2 px-2 text-white">{winner.name || '-'}</td>
+                        <td className="py-2 px-2 text-white">{winner.email}</td>
+                        <td className="py-2 px-2 text-white">{winner.phone || '-'}</td>
+                        <td className="py-2 px-2 text-[#FFD700] font-medium">{winner.won}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
