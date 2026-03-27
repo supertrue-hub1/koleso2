@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit2, Check, X, Save, RefreshCw, ChevronLeft, RotateCcw, Settings, Trophy } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Save, RefreshCw, ChevronLeft, RotateCcw, Settings, Trophy, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,6 +102,28 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
       console.error('Load winners error:', error);
     } finally {
       setWinnersLoading(false);
+    }
+  };
+
+  // Сброс победителей
+  const handleResetWinners = async () => {
+    if (!confirm('Очистить историю победителей? Это действие нельзя отменить.')) return;
+    
+    try {
+      const response = await fetch('/api/admin/winners', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setWinners([]);
+        alert('История победителей очищена!');
+      } else {
+        alert('Ошибка при очистке');
+      }
+    } catch (error) {
+      console.error('Reset winners error:', error);
+      alert('Ошибка при очистке');
     }
   };
 
@@ -376,13 +398,23 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
         {/* Топ 10 победителей */}
         <Card className="bg-[#2A2A2A] border border-[#444444] rounded-[10px] mb-6">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-b from-yellow-500 to-yellow-600 flex items-center justify-center rounded-[6px]">
-                <Trophy className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-b from-yellow-500 to-yellow-600 flex items-center justify-center rounded-[6px]">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <CardTitle className="text-lg text-white font-bold tracking-wide">
+                  ТОП 10 ПОБЕДИТЕЛЕЙ
+                </CardTitle>
               </div>
-              <CardTitle className="text-lg text-white font-bold tracking-wide">
-                ТОП 10 ПОБЕДИТЕЛЕЙ
-              </CardTitle>
+              <Button
+                onClick={handleResetWinners}
+                size="sm"
+                className="bg-red-600/20 hover:bg-red-600/30 text-red-500 rounded-[8px]"
+              >
+                <Trash className="w-4 h-4 mr-1" />
+                Очистить
+              </Button>
             </div>
           </CardHeader>
           <CardContent>

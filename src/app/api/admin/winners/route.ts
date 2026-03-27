@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
   try {
-    // Проверяем существование таблицы spinHistory
     let winners = [];
+    
+    // Пробуем получить данные
     try {
       winners = await db.spinHistory.findMany({
         where: {
@@ -38,10 +39,9 @@ export async function GET(request: NextRequest) {
         },
         take: 100,
       });
-    } catch (dbError) {
-      console.error('DB error:', dbError);
-      // Если таблица не существует, возвращаем пустой массив
-      return NextResponse.json({ winners: [] });
+    } catch (err) {
+      console.log('SpinHistory table does not exist or has no data');
+      return NextResponse.json({ winners: [], message: 'Таблица пуста или не создана' });
     }
 
     // Группируем по пользователю - последний выигрыш
@@ -78,5 +78,21 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get winners error:', error);
     return NextResponse.json({ winners: [] });
+  }
+}
+
+// DELETE - сбросить историю победителей
+export async function DELETE(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  
+  try {
+    await db.spinHistory.deleteMany({});
+    return NextResponse.json({ success: true, message: 'История победителей очищена' });
+  } catch (error) {
+    console.error('Reset winners error:', error);
+    return NextResponse.json({ error: 'Ошибка при очистке истории' }, { status: 500 });
   }
 }
