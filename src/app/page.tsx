@@ -213,6 +213,10 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm z-50">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
+            {/* Пустой блок для балансировки слева */}
+            <div className="w-32"></div>
+            
+            {/* Лого и текст по центру */}
             <div className="flex items-center gap-2 text-white font-bold text-lg tracking-widest">
               <img src="/logo1.png" alt="Лого" className="h-20 w-auto" />
               <div className="flex flex-col leading-tight">
@@ -221,7 +225,8 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            {/* Кнопки справа */}
+            <div className="flex items-center gap-3 w-32 justify-end">
               <Button
                 onClick={() => setShowPrizes(true)}
                 className="btn-secondary text-[#999999] hover:text-white"
