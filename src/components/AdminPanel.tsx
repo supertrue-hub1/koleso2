@@ -135,12 +135,16 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
         body: JSON.stringify(newSegment),
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
-        const data = await response.json();
         setSegments([...segments, data.segment]);
+      } else {
+        alert(data.error || 'Ошибка при добавлении сегмента');
       }
     } catch (error) {
       console.error('Add error:', error);
+      alert('Ошибка при добавлении сегмента');
     }
   };
 
