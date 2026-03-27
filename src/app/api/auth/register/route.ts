@@ -37,13 +37,17 @@ export async function POST(request: NextRequest) {
     // Хеширование пароля
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Определяем роль - если email в списке админов, делаем ADMIN
+    const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+    const userRole = adminEmails.includes(email.toLowerCase()) ? 'ADMIN' : 'user';
+
     // Создание пользователя
     const user = await db.user.create({
       data: {
         email: email.toLowerCase(),
         password: hashedPassword,
         name: name || email.split('@')[0],
-        role: 'user',
+        role: userRole,
       },
     });
 
