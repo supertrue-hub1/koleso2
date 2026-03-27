@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: "Крутите колесо и выигрывайте призы!",
   icons: {
     icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
   },
 };
 
