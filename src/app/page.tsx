@@ -210,11 +210,11 @@ export default function Home() {
       />
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#1A1A1A]/50 via-transparent to-[#1A1A1A]/80" />
       
-      <header className="border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm relative z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+      <header className="fixed top-0 left-0 right-0 border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm z-50">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Колесо Фортуны" className="h-12 w-auto" />
+              <img src="/logo.png" alt="Колесо Фортуны" className="h-20 w-auto" />
             </div>
             
             <div className="flex items-center gap-3">
@@ -267,8 +267,8 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 relative z-10 pt-24">
+        <div className="max-w-6xl mx-auto px-4 pb-8">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1 flex flex-col items-center">
               <motion.div
