@@ -73,9 +73,17 @@ export default function Home() {
   };
 
   const loadSpins = async () => {
+    if (!user) return;
+    
     try {
-      const response = await fetch('/api/spins', { credentials: 'include' });
+      const response = await fetch('/api/spins', {
+        headers: {
+          'x-user-id': user.id,
+          'x-user-role': user.isAdmin ? 'ADMIN' : 'user',
+        },
+      });
       const data = await response.json();
+      console.log('loadSpins - data:', data);
       setSpinsLeft(data.spinsLeft);
       setMaxSpins(data.maxSpins);
       // Если админ - показываем ∞

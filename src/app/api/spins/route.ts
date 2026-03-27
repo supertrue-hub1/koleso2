@@ -7,27 +7,20 @@ const prisma = new PrismaClient();
 // GET - получить оставшиеся попытки пользователя
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('session');
+    // Пробуем получить из заголовка (как в POST)
+    const userId = request.headers.get('x-user-id');
+    const userRole = request.headers.get('x-user-role');
     
-    if (!sessionCookie) {
+    console.log('GET /api/spins - userId:', userId, 'role:', userRole);
+
+    // Если нет userId - возвращаем 0
+    if (!userId) {
       return NextResponse.json({ spinsLeft: 0, maxSpins: 3, isAdmin: false });
     }
 
-    const session = JSON.parse(sessionCookie.value);
-
-    // Проверяем роль пользователя
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.id },
-      select: { role: true },
-    });
-
     // Если админ - возвращаем бесконечные попытки
-    if (currentUser?.role === 'ADMIN') {
-      return NextResponse.json({ 
-        spinsLeft: 999999, 
-        maxSpins: 999999,
-        isAdmin: true,
-      });
+    if (userRole === 'ADMIN') {
+      return NextResponse.json({ spinsLeft: 999999, maxSpins: 999999, isAdmin: true });
     }
 
     // Получаем настройку максимальных попыток
@@ -40,21 +33,46 @@ export async function GET(request: NextRequest) {
         maxSpins = parseInt(maxSpinsSetting.value);
       }
     } catch {
-      // Игнорируем ошибку
+      // Игнорируем
     }
 
-    // Получаем или создаем запись о попытках пользователя
-    let userSpin = await prisma.userSpin.findFirst({
-      where: { userId: session.id },
-    });
+    // Проверяем существует ли пользователь в БД
+    let userExists = false;
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      userExists = !!user;
+    } catch (err) {
+      console.log('User lookup failed:', err);
+    }
+
+    // Если пользователь не найден в БД - даём maxSpins
+    if (!userExists) {
+      console.log('User not in DB - returning maxSpins');
+      return NextResponse.json({ spinsLeft: maxSpins, maxSpins, isAdmin: false });
+    }
+
+    // Получаем или создаем запись о попытках
+    let userSpin = null;
+    try {
+      userSpin = await prisma.userSpin.findFirst({
+        where: { userId: userId },
+      });
+    } catch (err) {
+      console.log('userSpin lookup failed:', err);
+    }
 
     if (!userSpin) {
-      userSpin = await prisma.userSpin.create({
-        data: {
-          userId: session.id,
-          spinsLeft: maxSpins,
-        },
-      });
+      try {
+        userSpin = await prisma.userSpin.create({
+          data: { userId: userId, spinsLeft: maxSpins },
+        });
+      } catch (err) {
+        console.log('userSpin create failed:', err);
+        return NextResponse.json({ spinsLeft: maxSpins, maxSpins, isAdmin: false });
+      }
     }
 
     return NextResponse.json({ 
