@@ -214,10 +214,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-white font-bold text-lg tracking-widest">
-              <img src="/logo1.png" alt="Лого" className="h-12 w-auto" />
+              <img src="/logo1.png" alt="Лого" className="h-16 w-auto" />
               <div className="flex flex-col leading-tight">
                 <span>Т Е Р И Т О Р И Я</span>
-                <span className="ml-5">Т Е П Л А</span>
+                <span className="ml-8">Т Е П Л А</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
