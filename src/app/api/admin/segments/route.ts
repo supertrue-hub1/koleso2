@@ -1,38 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// Проверка прав администратора
-async function checkAdmin(request: NextRequest) {
-  const sessionCookie = request.cookies.get('session');
-  
-  if (!sessionCookie) {
-    return null;
-  }
-
-  try {
-    const session = JSON.parse(sessionCookie.value);
-    const user = await db.user.findUnique({
-      where: { id: session.id },
-      select: { role: true },
-    });
-
-    return user?.role === 'admin' ? session : null;
-  } catch {
-    return null;
-  }
-}
-
 // GET - получить все сегменты (включая неактивные)
 export async function GET(request: NextRequest) {
-  const admin = await checkAdmin(request);
-  
-  if (!admin) {
-    return NextResponse.json(
-      { error: 'Доступ запрещен' },
-      { status: 403 }
-    );
-  }
-
   try {
     const segments = await db.segment.findMany({
       orderBy: { order: 'asc' },
@@ -50,15 +20,6 @@ export async function GET(request: NextRequest) {
 
 // POST - создать новый сегмент
 export async function POST(request: NextRequest) {
-  const admin = await checkAdmin(request);
-  
-  if (!admin) {
-    return NextResponse.json(
-      { error: 'Доступ запрещен' },
-      { status: 403 }
-    );
-  }
-
   try {
     const body = await request.json();
     const { label, color, weight } = body;
@@ -96,15 +57,6 @@ export async function POST(request: NextRequest) {
 
 // PUT - обновить все сегменты
 export async function PUT(request: NextRequest) {
-  const admin = await checkAdmin(request);
-  
-  if (!admin) {
-    return NextResponse.json(
-      { error: 'Доступ запрещен' },
-      { status: 403 }
-    );
-  }
-
   try {
     const body = await request.json();
     const { segments } = body;
@@ -146,15 +98,6 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - удалить сегмент
 export async function DELETE(request: NextRequest) {
-  const admin = await checkAdmin(request);
-  
-  if (!admin) {
-    return NextResponse.json(
-      { error: 'Доступ запрещен' },
-      { status: 403 }
-    );
-  }
-
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
