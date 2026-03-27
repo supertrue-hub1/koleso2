@@ -324,13 +324,7 @@ export default function Home() {
                 >
                   {isSpinning ? (
                     <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        className="mr-2"
-                      >
-                        <Sparkles className="w-5 h-5" />
-                      </motion.div>
+                      <Sparkles className="w-5 h-5 mr-2 animate-spin" />
                       ВРАЩЕНИЕ...
                     </>
                   ) : !canSpin ? (
@@ -386,17 +380,11 @@ export default function Home() {
         </div>
       </main>
 
-      <AnimatePresence>
-        {showAuth && <AuthForm key="auth" onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
-      </AnimatePresence>
+      {showAuth && <AuthForm key="auth" onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
 
-      <AnimatePresence>
-        {showPrizes && (
+      {showPrizes && (
           <motion.div
             key="prizes-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
             onClick={() => setShowPrizes(false)}
           >
@@ -404,7 +392,6 @@ export default function Home() {
               key="prizes-content"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
@@ -468,13 +455,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showResult && winner && (
+      {showResult && winner && (
           <motion.div
             key="result-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
             onClick={() => setShowResult(false)}
           >
@@ -482,7 +465,6 @@ export default function Home() {
               key="result-content"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
             >
