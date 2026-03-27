@@ -28,6 +28,12 @@ export default function Home() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   
+  // Проверка админа
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+  const isAdmin = isSignedIn && clerkUser?.emailAddresses.some(e => 
+    adminEmails.includes(e.emailAddress.toLowerCase())
+  );
+  
   // Попытки
   const [spinsLeft, setSpinsLeft] = useState(0);
   const [maxSpins, setMaxSpins] = useState(3);
@@ -143,7 +149,7 @@ export default function Home() {
   const canSpin = isSignedIn || spinsLeft > 0;
 
   // Показываем админ-панель
-  if (showAdmin && isSignedIn) {
+  if (showAdmin && isAdmin) {
     return (
       <AdminPanel 
         onClose={() => {
@@ -206,13 +212,15 @@ export default function Home() {
                   <span className="text-sm text-[#999999]">
                     {clerkUser?.firstName || clerkUser?.emailAddresses[0]?.emailAddress}
                   </span>
-                  <Button
-                    onClick={() => setShowAdmin(true)}
-                    className="btn-secondary text-[#999999] hover:text-white"
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Админ
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => setShowAdmin(true)}
+                      className="btn-secondary text-[#999999] hover:text-white"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Админ
+                    </Button>
+                  )}
                   <UserButton />
                 </div>
               )}
