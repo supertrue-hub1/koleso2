@@ -105,13 +105,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Уменьшаем количество попыток
-    const updated = await prisma.userSpin.update({
-      where: { id: userSpin.id },
-      data: { spinsLeft: userSpin.spinsLeft - 1 },
-    });
+    // Уменьшаем количество попыток только для обычных пользователей
+    let updated = userSpin;
+    try {
+      // Проверяем роль пользователя
+      const currentUser = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { role: true },
+      });
+      
+      // Если не админ - уменьшаем попытки
+      if (currentUser?.role !== 'ADMIN') {
+        updated = await prisma.userSpin.update({
+          where: { id: userSpin.id },
+          data: { spinsLeft: userSpin.spinsLeft - 1 },
+        });
+      }
+    } catch (err) {
+      console.error('Error updating spins:', err);
+    }
 
-    // Записываем в историю выигрышей
+    // Записываем в историю выигрышей для всех пользователей
     if (segmentId) {
       try {
         await prisma.spinHistory.create({
@@ -122,6 +136,24 @@ export async function POST(request: NextRequest) {
         });
       } catch (err) {
         console.error('Error saving spin history:', err);
+      }
+    } else {
+      // Если segmentId не передан (для админа без ограничений), получаем случайный сегмент
+      try {
+        const segments = await prisma.segment.findMany({
+          where: { active: true },
+        });
+        if (segments.length > 0) {
+          const randomSegment = segments[Math.floor(Math.random() * segments.length)];
+          await prisma.spinHistory.create({
+            data: {
+              segmentId: randomSegment.id,
+              userId: session.id,
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Error saving spin history for admin:', err);
       }
     }
 

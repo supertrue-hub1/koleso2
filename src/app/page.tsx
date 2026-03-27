@@ -111,8 +111,10 @@ export default function Home() {
     const winningSegment = getWeightedRandomWinner(segments);
     if (!winningSegment) return;
 
-    if (user && !user.isAdmin) {
-      if (spinsLeft <= 0) {
+    // Записываем в историю для всех пользователей (включая админа)
+    if (user) {
+      // Для не-админов проверяем попытки
+      if (!user.isAdmin && spinsLeft <= 0) {
         alert('У вас закончились попытки!');
         return;
       }
@@ -129,7 +131,9 @@ export default function Home() {
           return;
         }
         const data = await response.json();
-        setSpinsLeft(data.spinsLeft);
+        if (!user.isAdmin) {
+          setSpinsLeft(data.spinsLeft);
+        }
       } catch (error) {
         console.error('Spin error:', error);
         return;
