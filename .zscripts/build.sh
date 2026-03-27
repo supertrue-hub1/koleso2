@@ -33,19 +33,19 @@ mkdir -p "$BUILD_DIR"
 
 # 安装依赖
 echo "📦 安装依赖..."
-bun install
+npm install
 
 # 生成 Prisma Client
 echo "🔧 生成 Prisma Client..."
-bunx prisma generate
+npx prisma generate
 
 # 推送数据库 schema
 echo "🗄️ 推送数据库 schema..."
-bunx prisma db push --accept-data-loss || true
+npx prisma db push --accept-data-loss || true
 
 # 构建 Next.js 应用
 echo "🔨 构建 Next.js 应用..."
-bun run build
+npm run build
 
 # 构建 mini-services
 # 检查 Next.js 项目目录下是否有 mini-services 目录
@@ -94,7 +94,7 @@ fi
 # 最后再迁移数据库到 BUILD_DIR/db
 if [ "$(ls -A ./db 2>/dev/null)" ]; then
     echo "🗄️  检测到数据库文件，运行数据库迁移..."
-    DATABASE_URL=file:$BUILD_DIR/db/custom.db bun run db:push
+    DATABASE_URL=file:$BUILD_DIR/db/custom.db npm run db:push
     echo "✅ 数据库迁移完成"
     ls -lah $BUILD_DIR/db
 else
