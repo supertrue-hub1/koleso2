@@ -1,8 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Проверка авторизации и роли админа
+async function checkAdminAuth(request: NextRequest) {
+  const sessionCookie = request.cookies.get('session');
+  
+  if (!sessionCookie) {
+    return { error: 'Не авторизован', status: 401 };
+  }
+
+  try {
+    const session = JSON.parse(sessionCookie.value);
+    const user = await db.user.findUnique({
+      where: { id: session.id },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return { error: 'Доступ запрещён', status: 403 };
+    }
+
+    return { authorized: true };
+  } catch {
+    return { error: 'Неверная сессия', status: 401 };
+  }
+}
+
 // GET - получить все настройки
 export async function GET(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
   try {
     // @ts-expect-error - settings table may not exist yet
     const settings = await db.settings?.findMany?.() || [];
@@ -27,6 +56,10 @@ export async function GET(request: NextRequest) {
 
 // PUT - обновить настройки
 export async function PUT(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
   try {
     const body = await request.json();
     const { maxSpins } = body;

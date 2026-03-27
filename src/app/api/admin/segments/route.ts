@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Проверка авторизации и роли админа
+async function checkAdminAuth(request: NextRequest) {
+  const sessionCookie = request.cookies.get('session');
+  
+  if (!sessionCookie) {
+    return { error: 'Не авторизован', status: 401 };
+  }
+
+  try {
+    const session = JSON.parse(sessionCookie.value);
+    const user = await db.user.findUnique({
+      where: { id: session.id },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return { error: 'Доступ запрещён', status: 403 };
+    }
+
+    return { authorized: true };
+  } catch {
+    return { error: 'Неверная сессия', status: 401 };
+  }
+}
+
 // GET - получить все сегменты (включая неактивные)
 export async function GET(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const segments = await db.segment.findMany({
       orderBy: { order: 'asc' },
@@ -20,6 +50,11 @@ export async function GET(request: NextRequest) {
 
 // POST - создать новый сегмент
 export async function POST(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const body = await request.json();
     const { label, color, weight } = body;
@@ -31,7 +66,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Получаем максимальный порядок
     const maxOrder = await db.segment.aggregate({
       _max: { order: true },
     });
@@ -57,6 +91,11 @@ export async function POST(request: NextRequest) {
 
 // PUT - обновить все сегменты
 export async function PUT(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const body = await request.json();
     const { segments } = body;
@@ -68,7 +107,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Обновляем каждый сегмент
     for (const seg of segments) {
       await db.segment.update({
         where: { id: seg.id },
@@ -98,6 +136,11 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - удалить сегмент
 export async function DELETE(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

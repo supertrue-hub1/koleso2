@@ -42,7 +42,9 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
   const loadSegments = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/segments');
+      const response = await fetch('/api/admin/segments', {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setSegments(data.segments);
@@ -58,7 +60,9 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
   const loadSettings = async () => {
     setSettingsLoading(true);
     try {
-      const response = await fetch('/api/admin/settings');
+      const response = await fetch('/api/admin/settings', {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setMaxSpins(data.maxSpins || 3);
@@ -81,6 +85,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ maxSpins }),
       });
 
@@ -100,6 +105,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
     try {
       const response = await fetch('/api/spins', {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -125,6 +131,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
       const response = await fetch('/api/admin/segments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(newSegment),
       });
 
@@ -149,6 +156,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
     try {
       const response = await fetch(`/api/admin/segments?id=${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -194,6 +202,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
       const segmentsResponse = await fetch('/api/admin/segments', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ segments }),
       });
 
@@ -201,6 +210,7 @@ export default function AdminPanel({ onClose, onSegmentsUpdate }: AdminPanelProp
       await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ maxSpins }),
       });
 
