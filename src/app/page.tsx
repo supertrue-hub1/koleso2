@@ -213,14 +213,63 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm z-50">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-<div className="flex items-center gap-2 text-white font-bold text-lg tracking-widest">
+            <div className="flex items-center gap-2 text-white font-bold text-lg tracking-widest">
               <img src="/logo1.png" alt="Лого" className="h-20 w-auto" />
               <div className="flex flex-col leading-tight">
                 <span>Т Е Р И Т О Р И Я</span>
                 <span className="ml-12">Т Е П Л А</span>
               </div>
             </div>
+            
+            <div className="flex items-center gap-3">
               <Button
+                onClick={() => setShowPrizes(true)}
+                className="btn-secondary text-[#999999] hover:text-white"
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Призы
+              </Button>
+              
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden md:flex items-center gap-2 text-[#999999]">
+                    <span className="text-sm">{user.name}</span>
+                    {user.isAdmin && (
+                      <span className="text-xs bg-[#FF8C00] text-white px-2 py-0.5 rounded-[4px]">ADMIN</span>
+                    )}
+                  </div>
+                  
+                  {user.isAdmin && (
+                    <Button
+                      onClick={() => setShowAdmin(true)}
+                      className="btn-secondary text-[#999999] hover:text-white"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Админ
+                    </Button>
+                  )}
+                  
+                  <Button
+                    onClick={handleLogout}
+                    className="btn-secondary text-[#999999] hover:text-white"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Выход
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setShowAuth(true)}
+                  className="btn-primary text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Войти
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
                 onClick={() => setShowPrizes(true)}
                 className="btn-secondary text-[#999999] hover:text-white"
               >
