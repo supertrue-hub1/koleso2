@@ -119,9 +119,10 @@ export default function Wheel({ segments, rotation, isSpinning, size = 400 }: Wh
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
 
-        const textRadius = radius * 0.72;
-        const text = segment.label.length > 10 ? segment.label.substring(0, 8) + '...' : segment.label;
-        ctx.fillText(text.toUpperCase(), textRadius, 5);
+        const textRadius = radius * 0.65;
+        const text = segment.label.length > 12 ? segment.label.substring(0, 10) + '..' : segment.label;
+        ctx.font = `bold ${Math.max(9, Math.min(13, radius * 0.055))}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.fillText(text.toUpperCase(), textRadius, 4);
         ctx.restore();
       });
     }
