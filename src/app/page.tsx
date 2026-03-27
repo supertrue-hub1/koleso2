@@ -216,8 +216,7 @@ export default function Home() {
             <div className="flex-1"></div>
             <img src="/logo2.png" alt="Колесо Фортуны" className="h-20 w-auto" />
             <div className="flex-1 flex justify-end">
-            
-            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
               <Button
                 onClick={() => setShowPrizes(true)}
                 className="btn-secondary text-[#999999] hover:text-white"
@@ -262,6 +261,7 @@ export default function Home() {
                   Войти
                 </Button>
               )}
+            </div>
             </div>
           </div>
         </div>
