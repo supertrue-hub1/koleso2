@@ -19,7 +19,7 @@ interface AuthFormProps {
   onClose: () => void;
 }
 
-export default function AuthForm({ onLogin }: AuthFormProps) {
+export default function AuthForm({ onLogin, onClose }: AuthFormProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
