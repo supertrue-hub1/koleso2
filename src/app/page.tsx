@@ -277,7 +277,7 @@ export default function Home() {
                 className="text-center mb-6"
               >
                 <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wider mb-2">
-                  КРУТИ И ВЫИГРЫВАЙ
+                  Забери свой бонус после утепления
                 </h2>
                 <p className="text-[#999999]">
                   {user?.isAdmin 
