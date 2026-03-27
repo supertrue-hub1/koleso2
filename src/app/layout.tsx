@@ -42,7 +42,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={{
+        locale: 'ru-RU',
+        localeLanguage: 'Русский',
+        signIn: {
+          title: 'Вход',
+          subtitle: 'Войдите в свой аккаунт',
+          emailAddress: 'Электронная почта',
+          password: 'Пароль',
+          primaryButton: 'Войти',
+          footerActionLink: 'Нет аккаунта? Зарегистрироваться',
+        },
+        signUp: {
+          title: 'Регистрация',
+          subtitle: 'Создайте аккаунт',
+          emailAddress: 'Электронная почта',
+          password: 'Пароль',
+          primaryButton: 'Зарегистрироваться',
+          footerActionLink: 'Уже есть аккаунт? Войти',
+        },
+      }}
+    >
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
