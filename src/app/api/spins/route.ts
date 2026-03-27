@@ -18,8 +18,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ spinsLeft: 0, maxSpins: 3, isAdmin: false });
     }
 
+    // Проверяем роль в БД
+    let isAdmin = false;
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      if (dbUser?.role === 'ADMIN') {
+        isAdmin = true;
+      }
+    } catch (err) {
+      console.log('User lookup failed:', err);
+    }
+
     // Если админ - возвращаем бесконечные попытки
-    if (userRole === 'ADMIN') {
+    if (isAdmin) {
       return NextResponse.json({ spinsLeft: 999999, maxSpins: 999999, isAdmin: true });
     }
 
