@@ -73,17 +73,30 @@ export async function POST(request: NextRequest) {
   try {
     const sessionCookie = request.cookies.get('session');
     
-    console.log('POST /api/spins - cookies:', request.cookies.getAll().map(c => c.name));
-    console.log('POST /api/spins - session cookie:', sessionCookie?.value);
+    // Логируем все куки для отладки
+    const allCookies = request.cookies.getAll();
+    console.log('POST /api/spins - ALL cookies:', allCookies.map(c => c.name));
+    console.log('POST /api/spins - session exists:', !!sessionCookie);
+    console.log('POST /api/spins - session value:', sessionCookie?.value?.substring(0, 50));
     
-    if (!sessionCookie) {
+    if (!sessionCookie || !sessionCookie.value) {
       return NextResponse.json(
-        { error: 'Необходимо авторизоваться', debug: 'no session cookie' },
+        { error: 'Необходимо авторизоваться', debug: 'no session cookie', cookies: allCookies.map(c => c.name) },
         { status: 401 }
       );
     }
 
-    const session = JSON.parse(sessionCookie.value);
+    let session;
+    try {
+      session = JSON.parse(sessionCookie.value);
+      console.log('POST /api/spins - parsed session:', session);
+    } catch (parseErr) {
+      console.error('Failed to parse session:', parseErr);
+      return NextResponse.json(
+        { error: 'Неверный формат сессии' },
+        { status: 401 }
+      );
+    }
 
     // Получаем данные из тела запроса (выпавший сегмент)
     const body = await request.json();
