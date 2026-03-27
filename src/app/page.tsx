@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw, Trophy, X, LogIn, LogOut, Settings, User, Gift } from 'lucide-react';
+import { Sparkles, RotateCcw, Trophy, X, LogOut, Settings, Gift } from 'lucide-react';
+import { useUser, UserButton, SignInButton } from '@clerk/nextjs';
 import Wheel from '@/components/Wheel';
-import AuthModal from '@/components/AuthModal';
 import AdminPanel from '@/components/AdminPanel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,14 +15,8 @@ import {
   calculateTargetRotation,
 } from '@/utils/weightedRandom';
 
-interface CurrentUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
-
 export default function Home() {
+  const { user: clerkUser, isSignedIn } = useUser();
   const [segments, setSegments] = useState<WheelSegment[]>([]);
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -31,10 +25,8 @@ export default function Home() {
   const [spinCount, setSpinCount] = useState(0);
   
   // Состояния авторизации
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   // Попытки
   const [spinsLeft, setSpinsLeft] = useState(0);
@@ -43,11 +35,6 @@ export default function Home() {
   // Модальное окно призов
   const [showPrizes, setShowPrizes] = useState(false);
 
-  // Проверка авторизации при загрузке
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   // Загрузка сегментов
   useEffect(() => {
     loadSegments();
@@ -55,22 +42,10 @@ export default function Home() {
 
   // Загрузка попыток при авторизации
   useEffect(() => {
-    if (user && user.role !== 'admin') {
+    if (isSignedIn) {
       loadSpins();
     }
-  }, [user]);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      const data = await response.json();
-      setUser(data.user);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isSignedIn]);
 
   const loadSegments = async () => {
     try {
@@ -100,18 +75,6 @@ export default function Home() {
     }
   };
 
-  const handleLogin = (loggedInUser: CurrentUser) => {
-    setUser(loggedInUser);
-    setShowAuth(false);
-  };
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
-    setSpinsLeft(0);
-    setShowAdmin(false);
-  };
-
   // Закрытие модального окна по Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -127,7 +90,7 @@ export default function Home() {
     if (isSpinning || segments.length < 2) return;
     
     // Для обычных пользователей проверяем и уменьшаем попытки
-    if (user && user.role !== 'admin') {
+    if (isSignedIn) {
       if (spinsLeft <= 0) {
         alert('У вас закончились попытки!');
         return;
@@ -165,7 +128,7 @@ export default function Home() {
       setShowResult(true);
       setIsSpinning(false);
     }, 5200);
-  }, [isSpinning, segments, user, spinsLeft]);
+  }, [isSpinning, segments, isSignedIn, spinsLeft]);
 
   const handleReset = useCallback(() => {
     setRotation(0);
@@ -176,11 +139,11 @@ export default function Home() {
 
   const totalWeight = segments.reduce((s, seg) => s + seg.weight, 0);
   
-  // Проверяем можно ли крутить
-  const canSpin = user?.role === 'admin' || spinsLeft > 0;
+  // Проверяем можно ли крутить (пока не проверяем роль - позже добавим)
+  const canSpin = isSignedIn || spinsLeft > 0;
 
   // Показываем админ-панель
-  if (showAdmin && user?.role === 'admin') {
+  if (showAdmin && isSignedIn) {
     return (
       <AdminPanel 
         onClose={() => {
@@ -231,45 +194,27 @@ export default function Home() {
                 Призы
               </Button>
               
-              {/* Пользователь / Авторизация */}
-              {loading ? (
-                <div className="text-[#666666] text-sm">Загрузка...</div>
-              ) : user ? (
+              {/* Пользователь / Авторизация через Clerk */}
+              {!isSignedIn ? (
+                <SignInButton mode="modal">
+                  <Button className="btn-primary text-white">
+                    Войти
+                  </Button>
+                </SignInButton>
+              ) : (
                 <div className="flex items-center gap-3">
-                  <div className="hidden md:flex items-center gap-2 text-[#999999]">
-                    <User className="w-4 h-4" />
-                    <span className="text-sm">{user.name || user.email}</span>
-                    {user.role === 'admin' && (
-                      <span className="text-xs bg-[#FF8C00] text-white px-2 py-0.5 rounded-[4px]">ADMIN</span>
-                    )}
-                  </div>
-                  
-                  {user.role === 'admin' && (
-                    <Button
-                      onClick={() => setShowAdmin(true)}
-                      className="btn-secondary text-[#999999] hover:text-white"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Админ
-                    </Button>
-                  )}
-                  
+                  <span className="text-sm text-[#999999]">
+                    {clerkUser?.firstName || clerkUser?.emailAddresses[0]?.emailAddress}
+                  </span>
                   <Button
-                    onClick={handleLogout}
+                    onClick={() => setShowAdmin(true)}
                     className="btn-secondary text-[#999999] hover:text-white"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Выход
+                    <Settings className="w-4 h-4 mr-2" />
+                    Админ
                   </Button>
+                  <UserButton />
                 </div>
-              ) : (
-                <Button
-                  onClick={() => setShowAuth(true)}
-                  className="btn-primary text-white"
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Войти
-                </Button>
               )}
             </div>
           </div>
@@ -293,10 +238,8 @@ export default function Home() {
                   КРУТИ И ВЫИГРЫВАЙ
                 </h2>
                 <p className="text-[#999999]">
-                  {user?.role === 'admin' 
-                    ? 'Режим администратора - без ограничений' 
-                    : user 
-                      ? `У вас ${spinsLeft} из ${maxSpins} попыток` 
+                  {isSignedIn 
+                    ? `У вас ${spinsLeft} из ${maxSpins} попыток` 
                       : 'Войдите, чтобы крутить колесо'}
                 </p>
               </motion.div>
@@ -397,17 +340,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
-      {/* Модальное окно авторизации */}
-      <AnimatePresence>
-        {showAuth && (
-          <AuthModal
-            isOpen={showAuth}
-            onClose={() => setShowAuth(false)}
-            onLogin={handleLogin}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Модальное окно с призами */}
       <AnimatePresence>
@@ -548,7 +480,7 @@ export default function Home() {
                     <p className="text-[#999999]">
                       Вы выиграли отличный приз!
                     </p>
-                    {user && user.role !== 'admin' && (
+{isSignedIn && (
                       <p className="text-[#FF8C00] text-sm mt-2">
                         Осталось попыток: {spinsLeft} из {maxSpins}
                       </p>
