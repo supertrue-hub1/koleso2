@@ -387,12 +387,13 @@ export default function Home() {
       </main>
 
       <AnimatePresence>
-        {showAuth && <AuthForm onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
+        {showAuth && <AuthForm key="auth" onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>
         {showPrizes && (
           <motion.div
+            key="prizes-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -400,6 +401,7 @@ export default function Home() {
             onClick={() => setShowPrizes(false)}
           >
             <motion.div
+              key="prizes-content"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -469,6 +471,7 @@ export default function Home() {
       <AnimatePresence>
         {showResult && winner && (
           <motion.div
+            key="result-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -476,6 +479,7 @@ export default function Home() {
             onClick={() => setShowResult(false)}
           >
             <motion.div
+              key="result-content"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
