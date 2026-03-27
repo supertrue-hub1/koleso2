@@ -10,10 +10,25 @@ export async function GET(request: NextRequest) {
     const sessionCookie = request.cookies.get('session');
     
     if (!sessionCookie) {
-      return NextResponse.json({ spinsLeft: 0, maxSpins: 3 });
+      return NextResponse.json({ spinsLeft: 0, maxSpins: 3, isAdmin: false });
     }
 
     const session = JSON.parse(sessionCookie.value);
+
+    // Проверяем роль пользователя
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { role: true },
+    });
+
+    // Если админ - возвращаем бесконечные попытки
+    if (currentUser?.role === 'ADMIN') {
+      return NextResponse.json({ 
+        spinsLeft: 999999, 
+        maxSpins: 999999,
+        isAdmin: true,
+      });
+    }
 
     // Получаем настройку максимальных попыток
     let maxSpins = 3;
@@ -45,10 +60,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       spinsLeft: userSpin.spinsLeft, 
       maxSpins,
+      isAdmin: false,
     });
   } catch (error) {
     console.error('Get spins error:', error);
-    return NextResponse.json({ spinsLeft: 3, maxSpins: 3 });
+    return NextResponse.json({ spinsLeft: 3, maxSpins: 3, isAdmin: false });
   }
 }
 

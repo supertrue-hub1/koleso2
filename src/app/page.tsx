@@ -78,6 +78,11 @@ export default function Home() {
       const data = await response.json();
       setSpinsLeft(data.spinsLeft);
       setMaxSpins(data.maxSpins);
+      // Если админ - показываем ∞
+      if (data.isAdmin) {
+        setMaxSpins(999999);
+        setSpinsLeft(999999);
+      }
     } catch (error) {
       console.error('Load spins error:', error);
     }
@@ -261,7 +266,7 @@ export default function Home() {
                 </h2>
                 <p className="text-[#999999]">
                   {user?.isAdmin 
-                    ? 'Режим администратора - без ограничений' 
+                    ? '∞ Без ограничений' 
                     : user 
                       ? `У вас ${spinsLeft} из ${maxSpins} попыток` 
                       : 'Войдите, чтобы крутить колесо'}
@@ -338,10 +343,12 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="mt-6 flex gap-6 text-sm text-[#666666]"
               >
-                {user && !user.isAdmin && (
+                {user && (
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 ${spinsLeft > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Попыток: <span className="text-white font-medium">{spinsLeft}/{maxSpins}</span></span>
+                    <div className={`w-2 h-2 ${user.isAdmin || spinsLeft > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span>Попыток: <span className="text-white font-medium">
+                      {user.isAdmin ? '∞' : `${spinsLeft}/${maxSpins}`}
+                    </span></span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
