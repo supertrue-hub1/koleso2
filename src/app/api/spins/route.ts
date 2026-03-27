@@ -112,15 +112,21 @@ export async function POST(request: NextRequest) {
         select: { role: true },
       });
     } catch (err) {
-      console.log('User not found in DB, allowing spin anyway');
+      console.log('User not found in DB');
     }
 
-    // Если админ или пользователь не найден - пропускаем проверку попыток
-    if (!currentUser || currentUser.role === 'ADMIN') {
+    // Если пользователь не найден в БД - просто разрешаем спин без записи в БД
+    if (!currentUser) {
+      console.log('User not in DB - allowing spin without tracking');
       return NextResponse.json({ 
-        spinsLeft: currentUser?.role === 'ADMIN' ? 999999 : maxSpins, 
-        maxSpins: currentUser?.role === 'ADMIN' ? 999999 : maxSpins,
+        spinsLeft: maxSpins, 
+        maxSpins,
       });
+    }
+
+    // Если админ - пропускаем проверку попыток
+    if (currentUser.role === 'ADMIN') {
+      return NextResponse.json({ spinsLeft: 999999, maxSpins: 999999 });
     }
 
     // Для обычных пользователей - работаем с попытками
@@ -130,7 +136,7 @@ export async function POST(request: NextRequest) {
         where: { userId: session.id },
       });
     } catch (err) {
-      console.log('userSpin not found, will create');
+      console.log('userSpin not found');
     }
 
     // Если записи нет, создаем с максимальными попытками
@@ -143,8 +149,9 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (err) {
-        console.log('Could not create userSpin, allowing spin anyway');
-        userSpin = { spinsLeft: maxSpins, id: null };
+        console.log('Could not create userSpin');
+        // Разрешаем спин без трекинга
+        return NextResponse.json({ spinsLeft: maxSpins, maxSpins });
       }
     }
 
@@ -168,13 +175,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Пробуем записать в историю (без userId если пользователь не найден)
+    // Записываем в историю выигрышей
     if (segmentId) {
       try {
         await prisma.spinHistory.create({
           data: {
             segmentId: segmentId,
-            userId: session.id, // может быть null если пользователь не найден
+            userId: session.id,
           },
         });
       } catch (err) {
