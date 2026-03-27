@@ -380,7 +380,8 @@ export default function Home() {
         </div>
       </main>
 
-      {showAuth && <AuthForm key="auth" onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
+      <AnimatePresence>
+        {showAuth && <AuthForm key="auth" onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
 
       {showPrizes && (
           <motion.div
@@ -453,7 +454,6 @@ export default function Home() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
 
       {showResult && winner && (
           <motion.div
