@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   phone: string;
+  password: string;
   isAdmin: boolean;
 }
 
@@ -21,6 +22,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
@@ -29,7 +31,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
     e.preventDefault();
     setError("");
 
-    if (!email || !phone) {
+    if (!email || !phone || !password) {
       setError("Заполните все поля");
       return;
     }
@@ -51,6 +53,7 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
         name,
         email,
         phone,
+        password,
         isAdmin: adminEmails.includes(email.toLowerCase()),
       };
       
@@ -61,10 +64,10 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
     } else {
       // Вход - проверяем в localStorage
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const user = users.find((u: User) => u.email === email);
+      const user = users.find((u: User) => u.email === email && u.password === password);
 
       if (!user) {
-        setError("Пользователь не найден");
+        setError("Неверная почта или пароль");
         return;
       }
 
@@ -112,6 +115,16 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+7 (999) 123-45-67"
+                className="bg-[#333333] border-[#444444] text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-[#999999]">Пароль</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Введите пароль"
                 className="bg-[#333333] border-[#444444] text-white"
               />
             </div>
