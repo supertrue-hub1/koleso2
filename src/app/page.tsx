@@ -352,7 +352,7 @@ export default function Home() {
       </main>
 
       <AnimatePresence>
-        {showAuth && <AuthForm onLogin={handleLogin} />}
+        {showAuth && <AuthForm onLogin={handleLogin} onClose={() => setShowAuth(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>

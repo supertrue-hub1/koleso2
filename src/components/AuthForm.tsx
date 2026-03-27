@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -15,6 +16,7 @@ interface User {
 
 interface AuthFormProps {
   onLogin: (user: User) => void;
+  onClose: () => void;
 }
 
 export default function AuthForm({ onLogin }: AuthFormProps) {
@@ -77,8 +79,24 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <Card className="w-full max-w-md bg-[#2A2A2A] border border-[#444444] rounded-[10px]">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <Card className="w-full max-w-md bg-[#2A2A2A] border border-[#444444] rounded-[10px] relative">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute right-4 top-4 text-[#666666] hover:text-white rounded-full"
+        >
+          <X className="w-5 h-5" />
+        </Button>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-white font-bold">
             {isLogin ? "Вход" : "Регистрация"}
