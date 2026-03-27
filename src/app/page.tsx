@@ -127,8 +127,11 @@ export default function Home() {
       try {
         const response = await fetch('/api/spins', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+            'x-user-role': user.isAdmin ? 'ADMIN' : 'user',
+          },
           body: JSON.stringify({ segmentId: winningSegment.id }),
         });
         if (!response.ok) {

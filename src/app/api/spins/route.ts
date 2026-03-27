@@ -71,30 +71,21 @@ export async function GET(request: NextRequest) {
 // POST - использовать одну попытку и записать результат
 export async function POST(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('session');
+    // Получаем userId из заголовка (отправляем с клиента)
+    const userId = request.headers.get('x-user-id');
+    const userRole = request.headers.get('x-user-role');
     
-    // Логируем все куки для отладки
-    const allCookies = request.cookies.getAll();
-    console.log('POST /api/spins - ALL cookies:', allCookies.map(c => c.name));
+    console.log('POST /api/spins - userId:', userId, 'role:', userRole);
     
     // Проверяем авторизацию
-    if (!sessionCookie || !sessionCookie.value) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'Необходимо авторизоваться' },
         { status: 401 }
       );
     }
 
-    let session;
-    try {
-      session = JSON.parse(sessionCookie.value);
-    } catch (parseErr) {
-      console.error('Failed to parse session:', parseErr);
-      return NextResponse.json(
-        { error: 'Неверный формат сессии' },
-        { status: 401 }
-      );
-    }
+    const session = { id: userId, role: userRole };
 
     // Получаем данные из тела запроса (выпавший сегмент)
     const body = await request.json();
