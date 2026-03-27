@@ -317,7 +317,7 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="mt-6 flex gap-6 text-sm text-[#666666]"
               >
-                {user && user.role !== 'admin' && (
+                {isSignedIn && (
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 ${spinsLeft > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span>Попыток: <span className="text-white font-medium">{spinsLeft}/{maxSpins}</span></span>
