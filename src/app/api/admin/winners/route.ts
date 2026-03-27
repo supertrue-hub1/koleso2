@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// Проверка авторизации (временно отключено)
+async function checkAdminAuth(request: NextRequest) {
+  return { authorized: true };
+}
+
 // GET - получить топ 10 выигрышей
 export async function GET(request: NextRequest) {
+  const auth = await checkAdminAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
   try {
     const winners = await db.spinHistory.findMany({
       where: {
