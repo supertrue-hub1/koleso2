@@ -76,16 +76,13 @@ export async function POST(request: NextRequest) {
     // Логируем все куки для отладки
     const allCookies = request.cookies.getAll();
     console.log('POST /api/spins - ALL cookies:', allCookies.map(c => c.name));
-    console.log('POST /api/spins - session exists:', !!sessionCookie);
     
-    // Если нет куки - возвращаем успех для тестирования (без записи в историю)
+    // Проверяем авторизацию
     if (!sessionCookie || !sessionCookie.value) {
-      console.log('No session cookie - allowing spin without history');
-      return NextResponse.json({ 
-        spinsLeft: 0, 
-        maxSpins: 3,
-        message: 'Spin allowed (no auth)',
-      });
+      return NextResponse.json(
+        { error: 'Необходимо авторизоваться' },
+        { status: 401 }
+      );
     }
 
     let session;
@@ -93,11 +90,10 @@ export async function POST(request: NextRequest) {
       session = JSON.parse(sessionCookie.value);
     } catch (parseErr) {
       console.error('Failed to parse session:', parseErr);
-      return NextResponse.json({ 
-        spinsLeft: 0, 
-        maxSpins: 3,
-        message: 'Spin allowed (invalid session)',
-      });
+      return NextResponse.json(
+        { error: 'Неверный формат сессии' },
+        { status: 401 }
+      );
     }
 
     // Получаем данные из тела запроса (выпавший сегмент)
