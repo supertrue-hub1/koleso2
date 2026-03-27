@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw, Trophy, X, LogOut, Settings, Gift } from 'lucide-react';
-import { useUser, UserButton, SignInButton } from '@clerk/nextjs';
+import { Sparkles, RotateCcw, Trophy, X, LogIn, LogOut, Settings, Gift } from 'lucide-react';
 import Wheel from '@/components/Wheel';
 import AdminPanel from '@/components/AdminPanel';
+import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -15,8 +15,16 @@ import {
   calculateTargetRotation,
 } from '@/utils/weightedRandom';
 
+interface User {
+  name: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
+}
+
 export default function Home() {
-  const { user: clerkUser, isSignedIn } = useUser();
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [segments, setSegments] = useState<WheelSegment[]>([]);
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -24,34 +32,27 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [spinCount, setSpinCount] = useState(0);
   
-  // Состояния авторизации
   const [showAdmin, setShowAdmin] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
-  // Проверка админа
-  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-  const isAdmin = isSignedIn && clerkUser?.emailAddresses.some(e => 
-    adminEmails.includes(e.emailAddress.toLowerCase())
-  );
-  
-  // Попытки
   const [spinsLeft, setSpinsLeft] = useState(0);
   const [maxSpins, setMaxSpins] = useState(3);
-  
-  // Модальное окно призов
   const [showPrizes, setShowPrizes] = useState(false);
 
-  // Загрузка сегментов
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   useEffect(() => {
     loadSegments();
   }, []);
 
-  // Загрузка попыток при авторизации
   useEffect(() => {
-    if (isSignedIn) {
+    if (user) {
       loadSpins();
     }
-  }, [isSignedIn]);
+  }, [user]);
 
   const loadSegments = async () => {
     try {
@@ -81,7 +82,18 @@ export default function Home() {
     }
   };
 
-  // Закрытие модального окна по Escape
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    setShowAuth(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setUser(null);
+    setSpinsLeft(0);
+    setShowAdmin(false);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showResult) {
@@ -95,14 +107,12 @@ export default function Home() {
   const handleSpin = useCallback(async () => {
     if (isSpinning || segments.length < 2) return;
     
-    // Для обычных пользователей проверяем и уменьшаем попытки
-    if (isSignedIn) {
+    if (user && !user.isAdmin) {
       if (spinsLeft <= 0) {
         alert('У вас закончились попытки!');
         return;
       }
       
-      // Уменьшаем попытки на сервере
       try {
         const response = await fetch('/api/spins', { method: 'POST' });
         if (!response.ok) {
@@ -134,7 +144,7 @@ export default function Home() {
       setShowResult(true);
       setIsSpinning(false);
     }, 5200);
-  }, [isSpinning, segments, isSignedIn, spinsLeft]);
+  }, [isSpinning, segments, user, spinsLeft]);
 
   const handleReset = useCallback(() => {
     setRotation(0);
@@ -143,13 +153,9 @@ export default function Home() {
     setIsSpinning(false);
   }, []);
 
-  const totalWeight = segments.reduce((s, seg) => s + seg.weight, 0);
-  
-  // Проверяем можно ли крутить (пока не проверяем роль - позже добавим)
-  const canSpin = isSignedIn || spinsLeft > 0;
+  const canSpin = user?.isAdmin || spinsLeft > 0;
 
-  // Показываем админ-панель
-  if (showAdmin && isAdmin) {
+  if (showAdmin && user?.isAdmin) {
     return (
       <AdminPanel 
         onClose={() => {
@@ -163,7 +169,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1A1A] relative overflow-hidden">
-      {/* Фоновое изображение */}
       <div 
         className="absolute inset-0 z-0 opacity-30"
         style={{
@@ -173,25 +178,16 @@ export default function Home() {
           backgroundRepeat: 'no-repeat',
         }}
       />
-      {/* Затемнение фона */}
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#1A1A1A]/50 via-transparent to-[#1A1A1A]/80" />
       
-      {/* Шапка */}
       <header className="border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm relative z-10">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* Логотип */}
             <div className="flex items-center gap-3">
-              <img 
-                src="/logo.png" 
-                alt="Колесо Фортуны" 
-                className="h-12 w-auto"
-              />
+              <img src="/logo.png" alt="Колесо Фортуны" className="h-12 w-auto" />
             </div>
             
-            {/* Правая часть */}
             <div className="flex items-center gap-3">
-              {/* Кнопка Призы */}
               <Button
                 onClick={() => setShowPrizes(true)}
                 className="btn-secondary text-[#999999] hover:text-white"
@@ -200,19 +196,16 @@ export default function Home() {
                 Призы
               </Button>
               
-              {/* Пользователь / Авторизация через Clerk */}
-              {!isSignedIn ? (
-                <SignInButton mode="modal">
-                  <Button className="btn-primary text-white">
-                    Войти
-                  </Button>
-                </SignInButton>
-              ) : (
+              {user ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-[#999999]">
-                    {clerkUser?.firstName || clerkUser?.emailAddresses[0]?.emailAddress}
-                  </span>
-                  {isAdmin && (
+                  <div className="hidden md:flex items-center gap-2 text-[#999999]">
+                    <span className="text-sm">{user.name}</span>
+                    {user.isAdmin && (
+                      <span className="text-xs bg-[#FF8C00] text-white px-2 py-0.5 rounded-[4px]">ADMIN</span>
+                    )}
+                  </div>
+                  
+                  {user.isAdmin && (
                     <Button
                       onClick={() => setShowAdmin(true)}
                       className="btn-secondary text-[#999999] hover:text-white"
@@ -221,22 +214,33 @@ export default function Home() {
                       Админ
                     </Button>
                   )}
-                  <UserButton />
+                  
+                  <Button
+                    onClick={handleLogout}
+                    className="btn-secondary text-[#999999] hover:text-white"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Выход
+                  </Button>
                 </div>
+              ) : (
+                <Button
+                  onClick={() => setShowAuth(true)}
+                  className="btn-primary text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Войти
+                </Button>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Основной контент */}
       <main className="flex-1 relative z-10">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
-            
-            {/* Колесо и кнопка */}
             <div className="flex-1 flex flex-col items-center">
-              {/* Заголовок секции */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -246,13 +250,14 @@ export default function Home() {
                   КРУТИ И ВЫИГРЫВАЙ
                 </h2>
                 <p className="text-[#999999]">
-                  {isSignedIn 
-                    ? `У вас ${spinsLeft} из ${maxSpins} попыток` 
+                  {user?.isAdmin 
+                    ? 'Режим администратора - без ограничений' 
+                    : user 
+                      ? `У вас ${spinsLeft} из ${maxSpins} попыток` 
                       : 'Войдите, чтобы крутить колесо'}
                 </p>
               </motion.div>
 
-              {/* Колесо */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -267,7 +272,6 @@ export default function Home() {
                 />
               </motion.div>
 
-              {/* Кнопки управления */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -318,14 +322,13 @@ export default function Home() {
                 </Button>
               </motion.div>
 
-              {/* Статистика */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
                 className="mt-6 flex gap-6 text-sm text-[#666666]"
               >
-                {isSignedIn && (
+                {user && !user.isAdmin && (
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 ${spinsLeft > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span>Попыток: <span className="text-white font-medium">{spinsLeft}/{maxSpins}</span></span>
@@ -343,13 +346,14 @@ export default function Home() {
                 )}
               </motion.div>
             </div>
-
-
           </div>
         </div>
       </main>
 
-      {/* Модальное окно с призами */}
+      <AnimatePresence>
+        {showAuth && <AuthForm onLogin={handleLogin} />}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showPrizes && (
           <motion.div
@@ -426,7 +430,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Модальное окно с результатом */}
       <AnimatePresence>
         {showResult && winner && (
           <motion.div
@@ -445,7 +448,6 @@ export default function Home() {
             >
               <Card className="w-full max-w-md bg-[#2A2A2A] border-2 border-[#FF8C00] winner-glow rounded-[10px]">
                 <CardHeader className="text-center pb-2 relative">
-                  {/* Кнопка закрытия */}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -477,18 +479,13 @@ export default function Home() {
                     className="mb-6"
                   >
                     <div className="flex items-center justify-center gap-3 mb-4">
-                      <div
-                        className="w-4 h-4"
-                        style={{ backgroundColor: winner.color }}
-                      />
+                      <div className="w-4 h-4" style={{ backgroundColor: winner.color }} />
                       <span className="text-2xl font-bold text-white uppercase tracking-wide">
                         {winner.label}
                       </span>
                     </div>
-                    <p className="text-[#999999]">
-                      Вы выиграли отличный приз!
-                    </p>
-{isSignedIn && (
+                    <p className="text-[#999999]">Вы выиграли отличный приз!</p>
+                    {user && !user.isAdmin && (
                       <p className="text-[#FF8C00] text-sm mt-2">
                         Осталось попыток: {spinsLeft} из {maxSpins}
                       </p>
@@ -526,7 +523,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Футер */}
       <footer className="border-t border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm py-4 relative z-10">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-[#666666] text-sm">
