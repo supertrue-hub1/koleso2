@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - использовать одну попытку
+// POST - использовать одну попытку и записать результат
 export async function POST(request: NextRequest) {
   try {
     const sessionCookie = request.cookies.get('session');
@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
     }
 
     const session = JSON.parse(sessionCookie.value);
+
+    // Получаем данные из тела запроса (выпавший сегмент)
+    const body = await request.json();
+    const { segmentId } = body;
 
     // Получаем максимальное количество попыток
     let maxSpins = 3;
@@ -106,6 +110,20 @@ export async function POST(request: NextRequest) {
       where: { id: userSpin.id },
       data: { spinsLeft: userSpin.spinsLeft - 1 },
     });
+
+    // Записываем в историю выигрышей
+    if (segmentId) {
+      try {
+        await prisma.spinHistory.create({
+          data: {
+            segmentId: segmentId,
+            userId: session.id,
+          },
+        });
+      } catch (err) {
+        console.error('Error saving spin history:', err);
+      }
+    }
 
     return NextResponse.json({ 
       spinsLeft: updated.spinsLeft, 

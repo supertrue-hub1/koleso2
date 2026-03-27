@@ -108,6 +108,9 @@ export default function Home() {
   const handleSpin = useCallback(async () => {
     if (isSpinning || segments.length < 2) return;
     
+    const winningSegment = getWeightedRandomWinner(segments);
+    if (!winningSegment) return;
+
     if (user && !user.isAdmin) {
       if (spinsLeft <= 0) {
         alert('У вас закончились попытки!');
@@ -115,7 +118,12 @@ export default function Home() {
       }
       
       try {
-        const response = await fetch('/api/spins', { method: 'POST' });
+        const response = await fetch('/api/spins', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ segmentId: winningSegment.id }),
+        });
         if (!response.ok) {
           alert('Ошибка при использовании попытки');
           return;
@@ -127,9 +135,6 @@ export default function Home() {
         return;
       }
     }
-
-    const winningSegment = getWeightedRandomWinner(segments);
-    if (!winningSegment) return;
 
     const segmentAngles = calculateSegmentAngles(segments);
     const fullRotations = 5 + Math.floor(Math.random() * 3);
