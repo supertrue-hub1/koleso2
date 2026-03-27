@@ -215,7 +215,10 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-white font-bold text-lg tracking-widest">
               <img src="/logo1.png" alt="Лого" className="h-10 w-auto" />
-              <span>Т Е Р И Т О Р И Я<br/>Т Е П Л А</span>
+              <div className="flex flex-col items-center">
+                <span>Т Е Р И Т О Р И Я</span>
+                <span className="ml-4">Т Е П Л А</span>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button
