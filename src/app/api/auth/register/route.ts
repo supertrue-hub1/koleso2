@@ -72,10 +72,9 @@ export async function POST(request: NextRequest) {
     response.cookies.set('session', sessionData, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 дней
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.frealab.ru' : undefined,
     });
 
     return response;
