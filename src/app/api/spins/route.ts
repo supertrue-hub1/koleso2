@@ -104,19 +104,59 @@ export async function POST(request: NextRequest) {
       // Игнорируем ошибку
     }
 
-    // Получаем запись о попытках
-    let userSpin = await prisma.userSpin.findFirst({
-      where: { userId: session.id },
-    });
+    // Проверяем существование пользователя
+    let currentUser = null;
+    try {
+      currentUser = await prisma.user.findUnique({
+        where: { id: session.id },
+        select: { role: true },
+      });
+    } catch (err) {
+      console.error('Error finding user:', err);
+    }
+
+    // Если админ - пропускаем проверку попыток
+    if (currentUser?.role === 'ADMIN') {
+      // Записываем в историю выигрышей
+      if (segmentId) {
+        try {
+          await prisma.spinHistory.create({
+            data: {
+              segmentId: segmentId,
+              userId: session.id,
+            },
+          });
+        } catch (err) {
+          console.error('Error saving spin history:', err);
+        }
+      }
+      return NextResponse.json({ spinsLeft: 999999, maxSpins: 999999 });
+    }
+
+    // Для обычных пользователей - работаем с попытками
+    let userSpin = null;
+    try {
+      userSpin = await prisma.userSpin.findFirst({
+        where: { userId: session.id },
+      });
+    } catch (err) {
+      console.error('Error finding userSpin:', err);
+    }
 
     // Если записи нет, создаем с максимальными попытками
     if (!userSpin) {
-      userSpin = await prisma.userSpin.create({
-        data: {
-          userId: session.id,
-          spinsLeft: maxSpins,
-        },
-      });
+      try {
+        userSpin = await prisma.userSpin.create({
+          data: {
+            userId: session.id,
+            spinsLeft: maxSpins,
+          },
+        });
+      } catch (err) {
+        console.error('Error creating userSpin:', err);
+        // Если не удалось создать - разрешаем спин
+        userSpin = { spinsLeft: maxSpins };
+      }
     }
 
     if (userSpin.spinsLeft <= 0) {
@@ -126,27 +166,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Уменьшаем количество попыток только для обычных пользователей
+    // Уменьшаем количество попыток
     let updated = userSpin;
     try {
-      // Проверяем роль пользователя
-      const currentUser = await prisma.user.findUnique({
-        where: { id: session.id },
-        select: { role: true },
+      updated = await prisma.userSpin.update({
+        where: { id: userSpin.id },
+        data: { spinsLeft: userSpin.spinsLeft - 1 },
       });
-      
-      // Если не админ - уменьшаем попытки
-      if (currentUser?.role !== 'ADMIN') {
-        updated = await prisma.userSpin.update({
-          where: { id: userSpin.id },
-          data: { spinsLeft: userSpin.spinsLeft - 1 },
-        });
-      }
     } catch (err) {
       console.error('Error updating spins:', err);
+      // Продолжаем, если не удалось обновить
     }
 
-    // Записываем в историю выигрышей для всех пользователей
+    // Записываем в историю выигрышей
     if (segmentId) {
       try {
         await prisma.spinHistory.create({
@@ -158,28 +190,10 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.error('Error saving spin history:', err);
       }
-    } else {
-      // Если segmentId не передан (для админа без ограничений), получаем случайный сегмент
-      try {
-        const segments = await prisma.segment.findMany({
-          where: { active: true },
-        });
-        if (segments.length > 0) {
-          const randomSegment = segments[Math.floor(Math.random() * segments.length)];
-          await prisma.spinHistory.create({
-            data: {
-              segmentId: randomSegment.id,
-              userId: session.id,
-            },
-          });
-        }
-      } catch (err) {
-        console.error('Error saving spin history for admin:', err);
-      }
     }
 
     return NextResponse.json({ 
-      spinsLeft: updated.spinsLeft, 
+      spinsLeft: updated.spinsLeft || 0, 
       maxSpins,
     });
   } catch (error) {
