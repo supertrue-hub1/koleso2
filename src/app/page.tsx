@@ -213,9 +213,12 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 border-b border-[#444444] bg-[#2A2A2A]/95 backdrop-blur-sm z-50">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src="/logo1.png" alt="Лого 1" className="h-16 w-auto" />
+              <img src="/logo2.png" alt="Лого 2" className="h-16 w-auto" />
+            </div>
             <div className="flex-1"></div>
-            <div className="flex-1 flex justify-end">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={() => setShowPrizes(true)}
                 className="btn-secondary text-[#999999] hover:text-white"
