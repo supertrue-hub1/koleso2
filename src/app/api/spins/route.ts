@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 // GET - получить оставшиеся попытки пользователя
 export async function GET(request: NextRequest) {
   try {
-    // Получаем email из заголовка
+    // Получаем email и phone из заголовка
     const userEmail = request.headers.get('x-user-email');
+    const userPhone = request.headers.get('x-user-phone') || '';
     
-    console.log('GET /api/spins - userEmail:', userEmail);
+    console.log('GET /api/spins - userEmail:', userEmail, 'phone:', userPhone);
 
     // Если нет email - возвращаем 0
     if (!userEmail) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     try {
       dbUser = await prisma.user.findUnique({
         where: { email: userEmail.toLowerCase() },
-        select: { id: true, role: true },
+        select: { id: true, role: true, phone: true },
       });
     } catch (err) {
       console.log('User lookup failed:', err);
@@ -51,14 +52,25 @@ export async function GET(request: NextRequest) {
             email: userEmail.toLowerCase(),
             password: '', // пустой пароль - локальный аккаунт
             name: userEmail.split('@')[0],
+            phone: userPhone || null,
             role: 'user',
           },
-          select: { id: true, role: true },
+          select: { id: true, role: true, phone: true },
         });
       } catch (err) {
         console.log('User create failed:', err);
         // Разрешаем спин без трекинга
         return NextResponse.json({ spinsLeft: maxSpins, maxSpins, isAdmin: false });
+      }
+    } else if (!dbUser.phone && userPhone) {
+      // Обновляем телефон если его нет
+      try {
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { phone: userPhone },
+        });
+      } catch (err) {
+        console.log('Phone update failed:', err);
       }
     }
 
@@ -102,10 +114,11 @@ export async function GET(request: NextRequest) {
 // POST - использовать одну попытку и записать результат
 export async function POST(request: NextRequest) {
   try {
-    // Получаем email из заголовка
+    // Получаем email и phone из заголовка
     const userEmail = request.headers.get('x-user-email');
+    const userPhone = request.headers.get('x-user-phone') || '';
     
-    console.log('POST /api/spins - userEmail:', userEmail);
+    console.log('POST /api/spins - userEmail:', userEmail, 'phone:', userPhone);
     
     // Проверяем авторизацию
     if (!userEmail) {
@@ -133,7 +146,7 @@ export async function POST(request: NextRequest) {
     try {
       dbUser = await prisma.user.findUnique({
         where: { email: userEmail.toLowerCase() },
-        select: { id: true, role: true },
+        select: { id: true, role: true, phone: true },
       });
     } catch (err) {
       console.log('User lookup failed:', err);
@@ -148,14 +161,25 @@ export async function POST(request: NextRequest) {
             email: userEmail.toLowerCase(),
             password: '',
             name: userEmail.split('@')[0],
+            phone: userPhone || null,
             role: 'user',
           },
-          select: { id: true, role: true },
+          select: { id: true, role: true, phone: true },
         });
       } catch (err) {
         console.log('User create failed:', err);
         // Разрешаем спин без трекинга
         return NextResponse.json({ spinsLeft: maxSpins, maxSpins });
+      }
+    } else if (!dbUser.phone && userPhone) {
+      // Обновляем телефон если его нет
+      try {
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { phone: userPhone },
+        });
+      } catch (err) {
+        console.log('Phone update failed:', err);
       }
     }
 

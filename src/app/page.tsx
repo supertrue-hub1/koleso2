@@ -79,6 +79,7 @@ export default function Home() {
       const response = await fetch('/api/spins', {
         headers: {
           'x-user-email': user.email,
+          'x-user-phone': user.phone || '',
         },
       });
       const data = await response.json();
@@ -139,6 +140,7 @@ export default function Home() {
           headers: { 
             'Content-Type': 'application/json',
             'x-user-email': user.email,
+            'x-user-phone': user.phone || '',
           },
           body: JSON.stringify({ segmentId: winningSegment.id }),
         });
