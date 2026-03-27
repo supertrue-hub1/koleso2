@@ -118,6 +118,8 @@ export default function Home() {
 
     // Записываем в историю для всех пользователей (включая админа)
     if (user) {
+      console.log('handleSpin - user:', user, 'spinsLeft:', spinsLeft, 'canSpin:', canSpin);
+      
       // Для не-админов проверяем попытки
       if (!user.isAdmin && spinsLeft <= 0) {
         alert('У вас закончились попытки!');
@@ -134,11 +136,13 @@ export default function Home() {
           },
           body: JSON.stringify({ segmentId: winningSegment.id }),
         });
+        console.log('handleSpin - response:', response.status);
         if (!response.ok) {
           alert('Ошибка при использовании попытки');
           return;
         }
         const data = await response.json();
+        console.log('handleSpin - data:', data);
         if (!user.isAdmin) {
           setSpinsLeft(data.spinsLeft);
         }
