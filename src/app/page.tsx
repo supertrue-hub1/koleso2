@@ -214,7 +214,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex-1"></div>
-            <img src="/logo2.png" alt="Колесо Фортуны" className="h-20 w-auto" />
+            <img src="/4444.png" alt="Колесо Фортуны" className="h-20 w-auto" />
             <div className="flex-1 flex justify-end">
               <div className="flex items-center gap-3">
               <Button
